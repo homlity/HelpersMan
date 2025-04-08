@@ -26,10 +26,19 @@ class BasicTest extends TestCase
 
     public function test_numero_a_letra()
     {
-        $numero = "400000";
-        $resutlado = Str::numberToLetter($numero);
-        $numeroEnLentras = "CUATROCIENTOS MIL";
-        $this->assertEquals($numeroEnLentras,$resutlado);
+       
+        $numeros = [
+            "400000" =>  "CUATROCIENTOS MIL",
+            "212000000" => "DOSCIENTOS DOCE MILLONES"
+        ];
+
+        foreach($numeros as $numero  => $numeroEnLentras ) {
+            
+            $resutlado = Str::numberToLetter($numero);
+            
+            $this->assertEquals($numeroEnLentras,$resutlado);
+        }
+
     }
 
 }

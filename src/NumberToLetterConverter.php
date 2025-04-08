@@ -100,67 +100,76 @@ class NumberToLetterConverter {
      * @param $miMoneda     
      * @return $converted string convertido
      */
-    private function convertNumber($number, $miMoneda = null) {   
-        
+    private function convertNumber($number, $miMoneda = null) {
         $converted = '';
+        
         if ($miMoneda !== null) {
             try {
-                
                 $moneda = array_filter($this->MONEDAS, function($m) use ($miMoneda) {
                     return ($m['currency'] == $miMoneda);
                 });
-
+    
                 $moneda = array_values($moneda);
-
+    
                 if (count($moneda) <= 0) {
                     throw new Exception("Tipo de moneda inválido");
-                    return;
                 }
-                ($number < 2 ? $moneda = $moneda[0]['singular'] : $moneda = $moneda[0]['plural']);
+    
+                $moneda = $number < 2 ? $moneda[0]['singular'] : $moneda[0]['plural'];
             } catch (Exception $e) {
                 echo $e->getMessage();
                 return;
             }
-        }else{
+        } else {
             $moneda = '';
         }
-
-        if (($number < 0) || ($number > 999999999)) {
+    
+        // Acepta hasta billones
+        if (!is_numeric($number) || $number < 0 || $number > 999999999999) {
             return false;
         }
-
-        $numberStr = (string) $number;
-        $numberStrFill = str_pad($numberStr, 9, '0', STR_PAD_LEFT);
-        $millones = substr($numberStrFill, 0, 3);
-        $miles = substr($numberStrFill, 3, 3);
-        $cientos = substr($numberStrFill, 6);
-
-        if (intval($millones) > 0) {
-            if ($millones == '001') {
-                $converted .= 'UN MILLON ';
-            } else if (intval($millones) > 0) {
-                $converted .= sprintf('%sMILLONES ', $this->convertGroup($millones));
-            }
-        }
-        
-        if (intval($miles) > 0) {
-            if ($miles == '001') {
-                $converted .= 'MIL ';
-            } else if (intval($miles) > 0) {
-                $converted .= sprintf('%sMIL ', $this->convertGroup($miles));
-            }
-        }
-
-        if (intval($cientos) > 0) {
-            if ($cientos == '001') {
-                $converted .= 'UN ';
-            } else if (intval($cientos) > 0) {
-                $converted .= sprintf('%s ', $this->convertGroup($cientos));
-            }
-        }
-
+    
+        $converted = $this->convertBigNumber($number);
         $converted .= $moneda;
-
+    
+        return $converted;
+    }
+    
+    private function convertBigNumber($number) {
+        $numberStr = str_pad($number, ceil(strlen($number) / 3) * 3, '0', STR_PAD_LEFT);
+        $parts = str_split($numberStr, 3);
+        $numParts = count($parts);
+    
+        $converted = '';
+        $sufijos = [
+            '', // unidades
+            'MIL ',
+            'MILLONES ',
+            'MIL MILLONES ',
+            'BILLONES ',
+            'MIL BILLONES ', // por si acaso
+        ];
+    
+        foreach ($parts as $i => $part) {
+            $intVal = intval($part);
+            if ($intVal === 0) continue;
+    
+            $pos = $numParts - $i - 1;
+            $texto = $this->convertGroup($part);
+    
+            if ($pos == 1 && $part == '001') {
+                $converted .= 'MIL ';
+            } else if ($pos == 2 && $part == '001') {
+                $converted .= 'UN MILLON ';
+            } else if ($pos == 2) {
+                $converted .= $texto . 'MILLONES ';
+            } else if ($pos == 3 && $part == '001') {
+                $converted .= 'MIL MILLONES ';
+            } else {
+                $converted .= $texto . ($sufijos[$pos] ?? '');
+            }
+        }
+    
         return $converted;
     }
 

@@ -19,9 +19,12 @@ class Arr {
 
         return $merged;
     }
-    public static function except(array $array, array $exceptKeys): array {
-        return array_filter($array, function ($value, $key) use ($exceptKeys) {
-            return !in_array($key, $exceptKeys) && !is_array($value);
+    public static function except(array $array, array $exceptKeys, bool $withOutrrayValue = true): array {
+        return array_filter($array, function ($value, $key) use ($exceptKeys, $withOutrrayValue) {
+            if($withOutrrayValue){
+                return !in_array($key, $exceptKeys) && !is_array($value);
+            }
+            return !in_array($key, $exceptKeys);
         }, ARRAY_FILTER_USE_BOTH);
     }
 }
